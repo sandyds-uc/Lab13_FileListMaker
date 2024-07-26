@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -5,9 +6,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList; // import ArrayList class
 import java.util.Scanner; // import Scanner class
 
-import static com.sun.beans.introspect.ClassInfo.clear;
+// import static com.sun.beans.introspect.ClassInfo.clear;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 /**
  *
@@ -35,7 +37,7 @@ public class FileListMaker // class FileListMaker
         {
             System.out.println(""); // insert blank line for visual effects
             displayList(); // display the list
-            cmd = SafeInput.getRegExString(in, Menu, "[AaDdIiPpQq]"); // prompt & input a menu choice from the user
+            cmd = SafeInput.getRegExString(in, Menu, "[AaDdIiMmVvSsOoCcQq]"); // prompt & input a menu choice from the user
             cmd = cmd.toUpperCase(); // ensure user choice is uppercase
             switch (cmd) // process depending on user's choice
             {
@@ -146,7 +148,7 @@ public class FileListMaker // class FileListMaker
         if (list.size() != 0)
         {
             int currentIndex = SafeInput.getRangedInt(in, "Enter item number to move", 1, list.size());
-            int desiredIndex = SafeInput.getRangedInt(in, "Enter new item number to move it to", 1, list.size());
+            int desiredIndex = SafeInput.getRangedInt(in, "Enter item number to move it to", 1, list.size());
             String listItem = list.remove(currentIndex - 1);
             list.add(desiredIndex - 1, listItem);
             saved = true;
@@ -163,7 +165,7 @@ public class FileListMaker // class FileListMaker
         Path file = Paths.get(workingDirectory.getPath() + "\\src\\data.txt");
         try
         {
-            OutputStream out = new BufferedOutputStream(Files.newOutputStream(file, CREATE));
+            OutputStream out = new BufferedOutputStream(Files.newOutputStream(file, CREATE, TRUNCATE_EXISTING));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
             for (String rec : list)
             {
@@ -177,20 +179,49 @@ public class FileListMaker // class FileListMaker
         {
             e.printStackTrace();
         }
-//        if (fileName.isEmpty())
-//        {
-//            fileName = SafeInput.getNonZeroLenString(in, "Enter file name") + ".txt";
-//        }
-//        try
-//        {
-//
-//        }
-//        catch (IOException e)
-//        {
-//            System.out.println("Error Occurred");
-//
-//        }
+    }
 
+    private static void open()
+    {
+        JFileChooser chooser = new JFileChooser();
+        File selectedFile;
+        String rec = "";
+        try
+        {
+            File workingDirectory = new File(System.getProperty("user.dir"));
+            chooser.setCurrentDirectory(workingDirectory);
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+            {
+                selectedFile = chooser.getSelectedFile();
+                Path file = selectedFile.toPath();
+                InputStream inn = new BufferedInputStream(Files.newInputStream(file, CREATE));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inn));
+                list.clear();
+                while ((rec = reader.readLine()) != null)
+                {
+                    list.add(rec);
+                    //rec = reader.readLine();
+                    //System.out.println(rec + "\n");
+                }
+                reader.close();
+                System.out.println("Opened file!");
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("File not found!");
+            e.printStackTrace();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static void clear()
+    {
+        list.clear();
+        saved = true;
     }
 
 } // end class FileListMaker
