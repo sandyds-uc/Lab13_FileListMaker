@@ -66,7 +66,8 @@ public class FileListMaker // class FileListMaker
                     clear();
                     break;
                 case "Q": // if user chooses Q
-                    if (saved)
+                    saved = false;
+                    if (!saved)
                     {
                         boolean saveChanges = SafeInput.getYNConfirm(in, "Save changes");
                         if(saveChanges)
@@ -74,11 +75,19 @@ public class FileListMaker // class FileListMaker
                             save();
                         }
                     }
-                    // print();
                     System.exit(0); // end program
                     break; // end case Q
             } // end switch for cases
             done = SafeInput.getYNConfirm(in, "Are you done?"); // prompt & input if user is done
+            saved = false;
+            if (done && !saved)
+            {
+                boolean saveIt = SafeInput.getYNConfirm(in, "Save changes");
+                if (saveIt)
+                {
+                    save();
+                }
+            }
         }while (!done); // loop while user is not done
         System.out.println("\nThe List is Finalized"); // output that the list is complete
         view(); // print list one last time
@@ -161,8 +170,14 @@ public class FileListMaker // class FileListMaker
 
     private static void save()
     {
+        String nameOfFile = SafeInput.getNonZeroLenString(in, "Enter new file name without extension");
+        if (!nameOfFile.endsWith(".txt"))
+        {
+            nameOfFile += ".txt";
+        }
         File workingDirectory = new File(System.getProperty("user.dir"));
-        Path file = Paths.get(workingDirectory.getPath() + "\\src\\data.txt");
+        Path fileStarter = Paths.get(workingDirectory.getPath(), "src");
+        Path file = Paths.get(fileStarter.toString(), nameOfFile);
         try
         {
             OutputStream out = new BufferedOutputStream(Files.newOutputStream(file, CREATE, TRUNCATE_EXISTING));
@@ -173,7 +188,8 @@ public class FileListMaker // class FileListMaker
                 writer.newLine();
             }
             writer.close();
-            System.out.println("New list saved!");
+            saved = true;
+            System.out.println("New list saved as " + nameOfFile);
         }
         catch (IOException e)
         {
@@ -183,6 +199,14 @@ public class FileListMaker // class FileListMaker
 
     private static void open()
     {
+        if(!saved)
+        {
+            boolean changesThere = SafeInput.getYNConfirm(in, "Save changes");
+            if (changesThere)
+            {
+                save();
+            }
+        }
         JFileChooser chooser = new JFileChooser();
         File selectedFile;
         String rec = "";
@@ -200,10 +224,9 @@ public class FileListMaker // class FileListMaker
                 while ((rec = reader.readLine()) != null)
                 {
                     list.add(rec);
-                    //rec = reader.readLine();
-                    //System.out.println(rec + "\n");
                 }
                 reader.close();
+                saved = true;
                 System.out.println("Opened file!");
             }
         }
